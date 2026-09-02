@@ -1,0 +1,329 @@
+﻿/*
+ * flash_intf.h
+ *
+ * Created: 29/04/2018 01:12:04 م
+ *  Author: reda.abdelhameid
+ */ 
+
+
+#ifndef FLASH_ADDRESS_H
+#define FLASH_ADDRESS_H
+/*
+=========================================================================
+ *         Include files
+ * ===========================================================================================*/
+#include "config.h" 
+#define FLASH_SECTOR_SIZE       (uint16_t)4096
+#define NUM_PAGES_PER_SECTOR    (uint8_t)16
+#define MAX_NUM_SECTORS         (uint16_t)1024
+#define NUM_BYTES_PER_PAGE      (uint16_t)256
+   
+/************************************* general addressess *************************************/
+#define Optical_Managment_guek_Key_ID_START_PAGE_INDEX           (uint8_t)0 
+#define Optical_Managment_guek_Key_ID_END_PAGE_INDEX             (uint8_t)3 
+#define Optical_Managment_guek_Key_ID_SECTOR                     297//sector  
+
+#define ASSO_NAME_SECURITY0_ID_START_PAGE_INDEX                  (uint8_t)4
+#define ASSO_NAME_SECURITY0_ID_END_PAGE_INDEX                    (uint8_t)4
+#define ASSO_NAME_SECURITY0_ID_SECTOR                            297//sector
+
+#define PW_MANAGER_CLIENT_OPTO_ID_START_PAGE_INDEX               (uint8_t)5
+#define PW_MANAGER_CLIENT_OPTO_ID_END_PAGE_INDEX                 (uint8_t)5
+#define PW_MANAGER_CLIENT_OPTO_ID_SECTOR                         297//sector
+
+#define HDLC_PHYSICAL_ID_ID_BYTE_INDEX                           (uint8_t)0
+#define HDLC_PHYSICAL_ID_ID_START_PAGE_INDEX                     6
+#define HDLC_PHYSICAL_ID_ID_END_PAGE_INDEX                       6
+#define HDLC_PHYSICAL_ID_ID_SECTOR                               297//sector
+   
+   
+/******************************** flash_app defined addressess ***********************************/
+#define ID_SECTOR_ADD 	   			                  0//sector
+// PageAdress = SectorADD*16 + pageIndex
+/*--- Image Data Sectors ---*/
+#define PRV_IMAGE_SECTOR_START_ADD		                  431 //sector
+#define PRV_IMAGE_SECTOR_END_ADD		                  500//sector
+
+#define CURRENT_IMAGE_SECTOR_START_ADD		                  301 //sector
+#define CURRENT_IMAGE_SECTOR_END_ADD		                  370//sector
+
+#define NEW_IMAGE_SECTOR_START_ADD		                  371//sector
+#define NEW_IMAGE_SECTOR_END_ADD		                  400//sector
+
+#define BOOT_IMAGE_SECTOR_START_ADD     	                  401//sector
+#define BOOT_IMAGE_SECTOR_END_ADD		                  430//sector
+
+#define NEW_BOOT_IMAGE_SECTOR_START_ADD		                  431//sector
+#define NEW_BOOT_IMAGE_SECTOR_END_ADD    	                  460//sector
+
+/*--- Id of every record or image saved in the first of each page in this sector and make the remaining reserved  ---*/
+#define MONEY_ID_PAGE_INDEX		   	                 (uint8_t)0
+#define BILLING_ID_PAGE_INDEX		                         (uint8_t)1
+#define CONFIG_METER_ID_PAGE_INDEX		                 (uint8_t)2
+#define EVENT_RECORD_ID_PAGE_INDEX	                         (uint8_t)3
+#define LOAD_PROFILE_ID_PAGE_INDEX	       	                 (uint8_t)4
+#define CONFIG_MD_PAGE_INDEX                                     (uint8_t)11
+#define DLMS_RECORDS_PAGE_INDEX                                  (uint8_t)12
+/*--- Images Information ID ---*/
+#define PRV_IMAGE_INFO_PAGE_INDEX        	                 (uint8_t)5
+#define CURRENT_IMAGE_INFO_PAGE_INDEX     	                 (uint8_t)6
+#define FUTURE_IMAGE_INFO_PAGE_INDEX	   	   	         (uint8_t)7
+#define CURRENT_BOOTLOADER_INFO_PAGE_INDEX                       (uint8_t)8
+#define NEW_BOOTLOADER_INFO_PAGE_INDEX	    	                 (uint8_t)9
+#define FLAG_IMAGE_INDICATION_PAGE_INDEX  	                 (uint8_t)10
+
+/*--- Records Data Sectors ---*/
+#define ROFILE_SECTOR_NUMBERS			                  272
+#define PROFILE_SECTOR_START_ADD                                  25//sector
+#define PROFILE_SECTOR_END_ADD                                    296//sector
+
+#define EVENT_RECORD_SECTOR_NUMBERS	                          8
+#define EVENT_RECORD_SECTOR_START_ADD                             16//sector
+#define EVENT_RECORD_SECTOR_END_ADD                               23//sector
+
+#define CONFIG_RECORD_SECTOR_NUMBERS	 	                  5
+#define CONFIG_RECORD_SECTOR_START_ADD                            10//sector
+#define CONFIG_RECORD_SECTOR_END_ADD                              14//sector
+
+#define BILLING_RECORD_SECTOR_NUMBERS		                  3
+#define BILLING_RECORD_SECTOR_START_ADD                           6//sector
+#define BILLING_RECORD_SECTOR_END_ADD                             8//sector
+   
+#define MONEY_RECORD_SECTOR_NUMBERS 		                  4
+#define MONEY_RECORD_SECTOR_START_ADD                             1//sector
+#define MONEY_RECORD_SECTOR_END_ADD                               4//sector
+
+#define MD_RECORD_SECTOR_NUMBERS 		                  2
+#define MD_RECORD_SECTOR_START_ADD                                298
+#define MD_RECORD_SECTOR_END_ADD                                  299//sector
+
+#define DLMS_RECORD_SECTOR_1_START_ADD                            503//sector 
+#define DLMS_RECORD_SECTOR_1_END_ADD                              504//sector
+
+#define DLMS_RECORD_SECTOR_2_START_ADD                            505//sector 
+#define DLMS_RECORD_SECTOR_2_END_ADD                              506//sector 
+
+#define DLMS_RECORD_SECTOR_3_START_ADD                            507//sector 
+#define DLMS_RECORD_SECTOR_3_END_ADD                              508//sector 
+
+#define DLMS_RECORD_SECTOR_4_START_ADD                            509//sector 
+#define DLMS_RECORD_SECTOR_4_END_ADD                              510//sector 
+
+#define DLMS_RECORD_SECTOR_5_START_ADD                            511//sector 
+#define DLMS_RECORD_SECTOR_5_END_ADD                              512//sector 
+
+#define DLMS_RECORD_SECTOR_6_START_ADD                            513//sector 
+#define DLMS_RECORD_SECTOR_6_END_ADD                              514//sector 
+
+#define DLMS_RECORD_SECTOR_7_START_ADD                            515//sector 
+#define DLMS_RECORD_SECTOR_7_END_ADD                              516//sector 
+
+#define DLMS_RECORD_SECTOR_8_START_ADD                            517//sector 
+#define DLMS_RECORD_SECTOR_8_END_ADD                              518//sector 
+
+#define DLMS_RECORD_SECTOR_9_START_ADD                            519//sector 
+#define DLMS_RECORD_SECTOR_9_END_ADD                              520//sector 
+
+#define DLMS_RECORD_SECTOR_10_START_ADD                           521//sector 
+#define DLMS_RECORD_SECTOR_10_END_ADD                             522//sector 
+
+#define DLMS_RECORD_SECTOR_11_START_ADD                           523//sector 
+#define DLMS_RECORD_SECTOR_11_END_ADD                             524//sector
+
+#define BACK_UP_SECTOR                                            525//sector 
+   /**************************************** Flash app generic address *********************************************************/
+/*----------- tampers store --------*/
+#define TAMPERS_COUNTER_ID_BYTE_INDEX                           0
+#define TAMPERS_COUNTER_ID_PAGE                                 0//page
+
+#define TAMPERS_COUNTER_REDUNDANT_ID_BYTE_INDEX                 100
+#define TAMPERS_COUNTER_REDUNDANT_ID_PAGE                       2//page
+
+#define LAST_TAMPER_ID_BYTE_INDEX                               190
+#define LAST_TAMPER_ID_PAGE                                     4//page
+   
+#define EVENTLOG_STORE_PERMISSION_BYTE_INDEX                    0
+#define EVENTLOG_STORE_PERMISSION_PAGE                          5//page -- takes 2 page(5,6)
+
+#define EVENT_LPM_0_ID_BYTE_INDEX                               0
+#define EVENT_LPM_1_ID_BYTE_INDEX                               16
+#define EVENT_LPM_2_ID_BYTE_INDEX                               32
+#define EVENT_LPM_ID_PAGE                                       7//page 
+
+#define INSTANTENOUS_ERROR_STATUS_ID_BYTE_INDEX                 74              
+#define ERROR_STATUS_ID_BYTE_INDEX                              70
+#define ERROR_STATUS_ID_PAGE                                    7//page
+
+#define LIMITER_LOADLIMIT_CFG_ID_BYTE_INDEX                     80
+#define LIMITER_LOADLIMIT_CFG_ID_PAGE                           7//page
+
+#define LIMITER_LOADLIMIT_NUM_OF_PLANS_ID_BYTE                  90
+#define LIMITER_LOADLIMIT_NUM_OF_PLANS_ID_PAGE                  7//page
+
+
+#define LIMITER_THRESH_CUR1_CFG_PARAMS_ID_INDEX                 95//16*6 till 200
+#define LIMITER_THRESH_CUR1_CFG_PARAMS_ID_PAGE                  7
+
+
+#define LIMITER_MON_VAL_CUR1_CFG_PARAMS_ID_BYTE                 195
+#define LIMITER_MON_VAL_CUR1_CFG_PARAMS_ID_PAGE                 7
+
+#define EVENTLOGSTOREPERMISSION_POWER_COC_ID_BYTE_INDEX         0
+#define EVENTLOGSTOREPERMISSION_POWER_COC_ID_PAGE               8//page take 2 pages (8,9)
+
+
+#define LIMITER_EMERGENCY_CUR1_CFG_PARAMS_BYTE                  0
+#define LIMITER_EMERGENCY_CUR1_CFG_PARAMS_PAGE                  10//2page(10,11)
+
+#define LIMITER_LOADLIMIT_PLAN1_INDEX                           0
+#define LIMITER_LOADLIMIT_PLAN1_PAGE                            12//2page(12,13)
+
+#define POWER_FAILURE_DURATION_OFFSET_ID_BYTE                   0//4bytes
+#define POWER_FAILURE_DURATION_OFFSET_ID_PAGE                   14//page                 
+
+#define SHORT_POWER_FAILURE_DURATION_OFFSET_ID_BYTE             4//2byte
+#define SHORT_POWER_FAILURE_DURATION_OFFSET_ID_PAGE             14//page
+
+#define LONG_POWER_FAILURE_DURATION_OFFSET_ID_BYTE              6//4byte
+#define LONG_POWER_FAILURE_DURATION_OFFSET_ID_PAGE              14//page
+
+#define LONG_POWER_FAILURE_THRESHOLD_OFFSET_ID_BYTE             10//2
+#define LONG_POWER_FAILURE_THRESHOLD_OFFSET_ID_PAGE             14//page
+
+#define SAG_STATES_DATA_OFFSET_ID_BYTE                          15// 75bytes
+#define SAG_STATES_DATA_OFFSET_ID_PAGE                          14//page
+
+#define SWELL_STATES_DATA_OFFSET_ID_BYTE                        100//75bytes
+#define SWELL_STATES_DATA_OFFSET_ID_PAGE                        14//page
+
+#define SHORT_POWER_FAILURE_COUNTER_ID_INDEX                    175//2 bytes
+#define SHORT_POWER_FAILURE_COUNTER_ID_PAGE                     14//page
+
+#define LONG_POWER_FAILURE_COUNTER_ID_BYTE                      177 // 2bytes
+#define LONG_POWER_FAILURE_COUNTER_ID_PAGE                      14//page
+
+#define POWER_CUT_START_OFFSET2_ID_BYTE                         180//25bytes
+#define POWER_CUT_START_OFFSET2_ID_PAGE                         14//page
+
+#define POWER_CUT_START_OFFSET2_ID_INDEX                        205//25bytes
+#define POWER_CUT_START_OFFSET2_ID_PAGE                         14//page
+
+#define LIMITER_LOADLIMIT_TYPE_ID_BYTE                          0///70byte
+#define LIMITER_LOADLIMIT_TYPE_ID_PAGE                          15//page
+
+#define TAMPERS_SECTOR                                          501//sector
+
+/*---- load profile store -------*/
+//Profile_ID_Cfg_Idx
+#define LP_CONFIG1_ID                                           0
+#define LP_CONFIG2_ID                                           15
+#define LP_CONFIG4_ID                                           30
+#define LP_CONFIG5_ID                                           45
+#define LP_CONFIG6_ID                                           60//15bytes
+
+#define LP_1_PAGE                                               0//page
+
+#define Battery_TamperEvent_Timestamp_ID                        80//todo it's size in future if you need to use all tampers ,now i use one only.
+#define Battery_TamperEvent_Timestamp_ID_PAGE                   LP_1_PAGE//page
+
+#define Battery_TamperEvent_Duration_ID                         200
+#define Battery_TamperEvent_Duration_ID_PAGE                    LP_1_PAGE//page
+
+#define Battery_TamperEvent_Cumulative_ID                       245
+#define Battery_TamperEvent_Cumulative_ID_PAGE                  LP_1_PAGE//page
+
+/////////////////
+//Capture_Object_list_Idx
+#define LP_OBJECTLIST_PAGE                                      1//page
+
+#define LP_OBJECTLIST_IDX1_ID                                   30
+#define LP_OBJECTLIST_IDX2_ID                                   60
+#define LP_OBJECTLIST_IDX4_ID                                   90
+#define LP_OBJECTLIST_IDX5_ID                                   120
+#define LP_OBJECTLIST_IDX6_ID                                   150
+//Capture_Object_list
+#define LP_OBJECTLIST_CFG1_ID                                   180
+#define LP_OBJECTLIST_CFG2_ID                                   192
+#define LP_OBJECTLIST_CFG3_ID                                   204
+#define LP_OBJECTLIST_CFG4_ID                                   216
+#define LP_OBJECTLIST_CFG5_ID                                   228//12byte
+#define LP_OBJECTLIST_CFG6_ID                                   240//12bytes
+
+////////////
+#define LAST_BILLING_MONTH_ID_BYTE                              0//25byte
+#define LAST_BILLING_MONTH_ID_PAGE                              2//page
+
+#define Time_Change_Flag_ID_BYTE                                25//1byte
+#define Time_Change_Flag_ID_PAGE                                2//page
+
+#define AMR_PROFILE_STATUS_CODE_ID                              26//1byte
+#define AMR_PROFILE_STATUS_CODE_ID_PAGE                         2//page
+////////////
+
+#define LP_SECTOR                                               502//sector
+
+
+///////////////////////////
+#define EVENT_NOT_SECTOR                                        LP_SECTOR
+
+#define LASTHANDLEEVENT_ID                                      0//64bytes
+#define LASTHANDLEEVENT_ID_PAGE                                 3
+
+//note : form 64 till 255 in page 3 is empty
+#define EVENTLOGSENDEPERMISSION_POWER_COC_ID                    0//512bytes //not jumping to anther page (checked ok ✔)
+#define EVENTLOGSENDEPERMISSION_POWER_COC_ID_PAGE               5 //2pages (5,6)
+
+/////////////
+#define CALENDER_SECTOR                                         LP_SECTOR
+   
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_ACTIVE_PASSIVE_TIME_ID  0//70bytes
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_ACTIVE_PASSIVE_TIME_ID_PAGE 7//page
+
+#define PassiveToActiveCoping_Flag_ID                           71 //5 bytes
+#define PassiveToActiveCoping_Flag_ID_PAGE                      7//page
+
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_CALENDER_NAME_ACTIVE_ID 78//36byte 
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_CALENDER_NAME_ACTIVE_ID_PAGE 7//page
+   
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_CALENDER_NAME_PASSIVE_ID 114//36bytes
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_CALENDER_NAME_PASSIVE_ID_PAGE 7//page
+
+//note : use this :: from 150 to 192 in page 7 is empty 
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_SEASON_ACTIVE_ID         152//520bytes, every one : 104bytes //not jumping to anther page (checked ok ✔)
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_SEASON_ACTIVE_ID_PAGE    7//page
+
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_SEASON_PASSIVE_ID        160          
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_SEASON_PASSIVE_ID_PAGE   9//page
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_WEEK_ACTIVE_ID           170//56*5=280
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_WEEK_ACTIVE_ID_PAGE      11//page
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_WEEK_PASSIVE_ID          194//280 till 218
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_WEEK_PASSIVE_ID_PAGE     11//page
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_DAY_TABLE_ACTIVE_ID      218// 384bytes 
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_DAY_TABLE_ACTIVE_ID_PAGE 12//  page
+
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_DAY_TABLE_PASSIVE_ID     92// 384bytes
+#define ACTIVTIY_CALENDAR_ACTIVE_IMPORT_DAY_TABLE_PASSIVE_ID_PAGE 14// page
+
+/////////////
+#define CALENDER_2_SECTOR                                         526//sector/****-----** last sector till now ****------*******/
+
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_ACTIVE_INDEX_ID           0//15bytes
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_ACTIVE_INDEX_ID_PAGE      0//page
+
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_PASSIVE_INDEX_ID         15//15bytes
+#define ACTIVITY_CALENDER_ACTIVE_IMPORT_PASSIVE_INDEX_ID_PAGE    0//page
+
+#define SPECIAL_DAYS_RECORDS_ID                                  30
+#define SPECIAL_DAYS_RECORDS_ID_PAGE                             0//page
+
+#define REGISTER_ACTIVATION_ACTIVE_IMPORT_REGISTER_ASSIGMENT_NUM_ID 40//5bytes
+#define REGISTER_ACTIVATION_ACTIVE_IMPORT_REGISTER_ASSIGMENT_NUM_ID_PAGE 0//page 
+
+#define REGISTER_ACTIVATION_ACTIVE_IMPORT_REGISTE_ACTIVATION_NUM_ID  45//5bytes
+#define REGISTER_ACTIVATION_ACTIVE_IMPORT_REGISTE_ACTIVATION_NUM_ID_PAGE  0//page 
+#endif	// end of file
