@@ -1,0 +1,524 @@
+/**
+ * @author Ahmed Elhossiny
+ * @create date 2022-12-1
+ * @desc LCD_7567_INTERFACING.h
+ */
+
+#ifndef DOT_MATRIX_INTERFACE_H_
+#define DOT_MATRIX_INTERFACE_H_
+#include "config.h"
+#include "Flash.h"
+#include "string.h"
+#include "basic_srv.h"
+#include "SPI_Interface.h"
+#include "SystemTick_Interface.h"
+#include "ctrl.h"
+
+/******************** MACROS FOR INTERNAL FLASH ******************/
+#define NUM_SECTORS_DOTMATRIX_INTERNAL  199   //this number of sector for one language
+
+/******************** MACROS FOR INTERNAL FLASH ******************/
+
+#define CHECK_BITT(Reg,bit)         ((Reg>>bit)&1)
+#define DOT_MATRIX_FRAME_SIZE 261
+#define DIFFERENCE_OFFSET_BETWEEN_AR_EN 25
+#define DIFFERENCE_OFFSET_BETWEEN_AR_FR 50
+#define DOT_MATRIX_LANGUAGE1_OFFSET                (0)
+#define DOT_MATRIX_LANGUAGE2_OFFSET                (DIFFERENCE_OFFSET_BETWEEN_AR_EN * 4096)   
+#define DOT_MATRIX_LANGUAGE3_OFFSET                (DIFFERENCE_OFFSET_BETWEEN_AR_FR * 4096)   
+#define DOT_MATRIX_CTRL_CHANGE_LANG_FLAG           ctrl_sys_new_var.ctrl_change_dot_matrix_language_flag
+#define DOT_MATRIX_SAVE_CRITICAL_DATA()             ctrl_event(CTRL_SAVE_CRITICAL_DATA)
+
+
+
+
+
+/*********************************LCD MAPPING PAGES*********************************/
+typedef enum
+{
+  V_NUM0 = 1,
+  V_NUM1,
+  V_NUM2,
+  V_NUM3,
+  V_NUM4,
+  V_NUM5,
+  V_NUM6,
+  V_NUM7,
+  V_NUM8,
+  V_NUM9,
+  V_DOT,
+  I_DOT,
+  V_DASH,
+  V_space,
+  ddot,
+} EN_DOT_MATRIX_VALUE_NUMBERS;
+
+typedef enum
+{
+  WIFI = 16,
+  OPTICAL,
+  GPRS_SIGNAL,
+  BLUETOOTH,
+  RS_458,
+  MESSAGE,
+  BATT,
+  L1,
+  L2,
+  L3,
+  UP_ARROW,
+  DOWN_ARROW,
+  RIGHT_ARROW,
+  LEFT_ARROW,
+  SMILE_FACE,
+  SAD_FACE,
+} EN_DOT_MATRIX_SYMBOLS1;
+
+typedef enum
+{
+  MAGNET = 32,
+  REVERSE,
+  OPEN_RELAY,
+  GROUND,
+  HANDCHECK,
+  RF,
+  LOAD,
+  CARD, // elkart
+  IN,   // est5dm
+  ALARM,
+#ifdef ANSI_STACK
+  PRUEBA =46,
+#endif  
+  LAST_SYMBOL,
+} EN_DOT_MATRIX_SYMBOLS2;
+
+typedef enum
+{ 
+  GPRS_WORD = 48,
+  ERROR_RELAY,
+  _8ER,
+  MA2BOL,
+  reserved1,
+  reserved2,
+  _7ML, //a2sy 7ml
+  ZA2D,
+  ELRASEED,
+  ELBA2Y,
+  GNEH,
+  YOOM,
+  EL7ALY,
+  ELSABEQ,
+  EGMALY,
+  MOTAWSET,
+} EN_DOT_MATRIX_WORDS1;
+
+typedef enum
+{
+  MO3AML_ELQUDRA = 64,
+  ESTHLAK,
+  ELSHARE7A,
+  CODE,
+  DUON,
+  ELTARE5,
+  TLA3OB,
+  ELWA2T,
+  MO8L2,
+  MAFTO7,
+  STS_CODE,
+  ELMOSHTAREK,
+  EL3DAD,
+  KOLI,
+  ZERO_DASH,
+  INF,
+} EN_DOT_MATRIX_WORDS2;
+
+typedef enum
+{
+  KILO = 80,
+  KWH,
+  MEGA,
+  GIGA,
+  VOLT,
+  KVA,
+  MVA,
+  GVA,
+  HZ,
+  AMP,
+  KW,
+  KVAR,
+  KVARH,
+} EN_DOT_MATRIX_UNITS;
+
+typedef enum
+{
+  a = 96,
+  b,
+  c,
+  d,
+  e,
+  f,
+  g,
+  h,
+  i,
+  j,
+  k,
+  l,
+  m,
+  n,
+  o,
+  p,
+} EN_DOT_MATRIX_ALPHA1;
+typedef enum
+{
+  q = 112,
+  r,
+  s,
+  t,
+  u,
+  v,
+  w,
+  x,
+  y,
+  z,
+  
+} EN_DOT_MATRIX_ALPHA2;
+
+typedef enum
+{
+  I_NUM0 = 129,
+  I_NUM1,
+  I_NUM2,
+  I_NUM3,
+  I_NUM4,
+  I_NUM5,
+  I_NUM6,
+  I_NUM7,
+  I_NUM8,
+  I_NUM9,
+  I_DASH,
+  I_SPACE,
+} EN_DOT_MATRIX_INDEX_NUMBERS;
+typedef enum
+{
+  T_OPEN = 144,
+  C_OPEN,
+  LOW_BATT,
+  NO_BATT,
+  AM,
+  PM,
+  ACTIVITY,
+  IP,
+  MANUAL,
+  AUTOMATIC,
+  PT,
+  CT,
+  APN_SYMBOL,
+  PHSEQ,
+  PH1,
+} EN_DOT_MATRIX_WORDS3;
+typedef enum
+{
+  PH2 = 160,
+  PH3 ,
+  SCREEN_BATT , //inside screen 26 
+  METER_TYPE_1S,
+  METER_TYPE_12S,
+  METER_TYPE_16S,
+
+  
+} EN_DOT_MATRIX_WORDS4;
+
+enum
+{
+  WRITE_SCREEN = 0,
+  WRITE_SYMBOL,
+};
+
+enum
+{
+  DATA_READ = 0,
+  DATA_WRITE,
+};
+enum
+{
+  SYM_OR_SCR=0,
+  ERASE_ALL_SECT,
+  ONE_OR_TWO_SCR,
+  CHANGE_SYM_OR_SCR,
+};
+
+enum 
+{
+  READING=0,
+  WRITING,
+};
+
+enum 
+{
+  LANGUAGE1=0,
+  LANGUAGE2,
+  LANGUAGE3,
+};
+
+/*********************************** LCD SCREENS Num of Array Elements  **************************************/
+#define Test_Screen 1
+#define Remaining 8
+#define Total_consumption 2
+#define Active_Energy 4
+#define Reverse_Energy 2
+#define Earth_Energy_Fault_Energy 1
+#define Charges 6
+#define Date_Time 2
+#define Alarm_Limit 12
+#define Voltage_Instantaneous 3
+#define Current_Instantaneous 6
+#define Frequency 1
+#define Power_Factor_Instantaneous 6
+#define Active_Power_Instantaneous 4
+#define ID 7
+#define Tamper_Count 7
+#define Tampering_indication_in_the_register 5    //last 1
+#define MDA_Billing_Period 6
+#define MDA_Billing_Period_for_tariff 1
+#define MD_KW_Billing_Period 6
+#define MD_KW_Billing_Period_for_tariff 1
+#define MDA_meter_life 11
+#define MD_KW_meter_life 11
+#define MD_reset_count 1
+#define Level 3
+#define Meter_reading 2
+#define Pulse_indication_test 1
+#define Load_Cost_per_Hours 2
+#define Tariff_prices 1
+#define Tariff_steps 1
+#define Taxes 3
+#define MD_KVA_Billing_Period 6
+#define MD_KVA_Billing_Period_for_tariff 1
+#define MD_KVA_meter_life 4
+#define Tariff_Active_Energy_KWh 7
+#define Power_Interrupt 1
+#define Total_Reactive_energy 5
+#define Total_apparent_energy 3
+#define Reactive_power 4
+#define Apparent_power 4
+#define Step_remaining 1
+#define Billing_period_consumption 1
+#define Billing_period_bill 1
+#define Friendly_consumption 1
+#define start_of_time_and_date_tamper_event 1        // using STS_test0_screens instead of that screens
+#define stop_of_time_and_date_tamper_event 1          // not using so we can remove it , last 36
+#define Test_Accuracy 2
+#define Last_12Consumption_In_KWH_And_Money 1       //last 24 but we make it as a special screen ,all 24 screens as one screen
+#define Total_Debit 3
+#define Last_12Customer_Services_Taxes 12
+#define State_of_relay 1
+#define Current_Level_KWH_per_Current_Step_Tariff 1
+#define Sum_of_charge_interfaces 1
+#define Tamper_counter 9
+#define Error_of_contactor 1
+#define Date_of_Last_charge 1
+#define Department_ID 1
+#define Overload_Counter 1
+#define Battery_Screen 1
+#define Last_terminal_cover_tamper 2
+#define Selected_screens 19
+#define Reserved1 1 
+#define Active_4Q_consumption 4
+#define Reactive_4Q_consumption 4
+#define Indirect_param 3
+#define Reserved2 1
+#define BPH_reactive_consumption_in_KVAR_for_each_Billing_Record 1
+#define BPH_MDW_consumption_in_KW_for_each_Billing 1
+#define BPH_Power_factor_for_each_Billing_Record 1
+#define Total_Export_Energy 1
+#define Total_import_and_export_Energy 1
+#define Total_import_Energy 1
+#define sts_code 1
+#define disp_message 1
+#define STS_TEST0_Screens 9
+#define GPRS_Screens 7
+#define Reserved3 1
+#define TOKENS_SCREENS 10
+/*********************************** LCD SCREENS SUB INDEX **************************************/
+
+/*********************** 0-Test Screen **********************/
+
+/************************* 1-Remaining ********************/
+
+/************************* 2-Total consumption ********************/
+
+/************************* 3-Active Energy ********************/
+
+/************************* 4-Reverse Energy ********************/
+
+/*************** 5-Earth Energy(Fault Energy) ******************/
+
+/*************************** 6-Charges *************************/
+
+/************************ 7-Date / Time *************************/
+
+/************************ 8-Alarm Limit *************************/
+
+/****************** 9-Voltage Instantaneous *******************/
+
+/****************** 10-Current Instantaneous *******************/
+
+/****************** 11-Frequency *******************/
+
+/****************** 12-Power Factor Instantaneous *******************/
+
+/*************************** 13-Active Power ************************/
+
+/**************************** 14-ID  ******************************/
+
+/************************* 15-Tamper Count  **********************/
+
+/***********  16-Tampering indication in the register  **********/
+
+/********************  17-MDA Billing Period  ******************/
+
+
+/**************  18-MDA Billing Period for tariff  ***************/
+
+/********************  19-MD KW Billing Period  ******************/
+
+/*************  20-MD KW Billing Period for tariff  **************/
+
+/**********************  21-MDA meter life  **********************/
+
+/********************  22-MDA KW meter life  ********************/
+
+/********************  23-MD reset count  ********************/
+
+/************************ 24-Level  **************************/
+
+/********************  25-Meter Reading  ********************/
+
+/********************  26-Pulse indication test  ********************/
+
+/********************  27-Load Cost per Hours  ********************/
+
+/********************  28-Tariff prices  ********************/
+
+/********************  29-Tariff steps  ********************/
+
+/*************************  30-Taxes  ***************************/
+
+/*****************  31-MD KVA Billing Period  *******************/
+
+/************  32-MD KVA Billing Period for tariff  *************/
+
+/*****************  33-MD KVA meter life  *******************/
+
+/************** 34-Tariff Active Energy KWh  *************/
+
+/******************  35-Power Interrupt  ******************/
+
+/**************** 36-Total Reactive energy ***************/
+
+/****************  37-Total apparent energy ***************/
+
+/******************  38-Reactive power ********************/
+
+/****************** 39-Apparent power ********************/
+
+/****************** 40-Step remaining ********************/
+
+/************ 41-Billing period consumption **************/
+
+/*************** 42-Billing period bill ******************/
+
+/*************** 43-Friendly consumption *****************/
+
+/************* 44-start of time and date tamper event ************/
+/********* Date & Time of Terminal openStart ********/
+/********* Date & Time of Cover open Start ********/
+/********* Date & Time of Reverse Ch A Start ********/
+/********* Date & Time of Fault Energy Start ********/
+/********* Date & Time of Overload Start ********/
+/********* Date & Time of Reverse Ch B Start ********/
+
+/************* 45-stop of time and date tamper event************/
+/********* Date & Time of Terminal open stop ********/
+/********* Date & Time of Cover open stop ********/
+/********* Date & Time of Reverse Ch A stop ********/
+/********* Date & Time of Fault Energy stop ********/
+/********* Date & Time of Overload stop ********/
+/********* Date & Time of Reverse Ch B stop ********/
+
+/****************** 46-Test Accuracy ********************/
+
+/******* 47-Last 12 Consumption In KWH And Money ********/
+
+/****************** 48-Total Debit ********************/
+
+/******** 49-Last 12 Customer Services Taxes **********/
+
+/****************** 50-State of relay ********************/
+
+/****************** 51-Current Level KWH per Current Step Tariff ********************/
+
+/****************** 52-Sum of charge interfaces ********************/
+
+/****************** 53-Tamper counter ********************/
+
+/****************** 54-Error of contactor ********************/
+
+/****************** 55-Date of Last charge ********************/
+
+/****************** 56-department ID ********************/
+
+/****************** 57-Overload Counter ********************/
+
+/****************** 58-Battery Screen ********************/
+
+/*************  59-Last terminal cover tamper *************/
+
+/****************** 60-Reserved1 ********************/
+
+/****************** 61-Selected Screen ********************/
+
+/****************** 62-Active 4Q consumption ********************/
+
+/****************** 63-Reactive 4Q consumption ********************/
+
+/****************** 64-Indirect parameter ********************/
+
+/****************** 65-Reserved2 ********************/
+
+/******** 66-BPH reactive consumption in KVAR for each Billing Record **********/
+
+/******** 67-BPH reactive consumption in KW for each Billing Record **********/
+
+/******** 68-BPH Power factor in KVAR for each Billing Record **********/
+
+/****************** 69-Total Export Energy ********************/
+
+/****************** 70-Total import and export Energy ********************/
+
+/****************** 71-Total import Energy ********************/
+
+/*********************************** LCD SCREENS Index **************************************/
+#define INDEX_Test_Screen 0
+
+/************functions prototyping************/
+void bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t* input);
+void Draw_All_Screen(void);
+void Dot_Matrix_Draw_Screen(uint8_t screen_index, uint8_t screen_sub_index, uint64_t value, uint8_t *index_array);
+void Draw_STS_Screen(uint8_t screen_index, uint8_t screen_sub_index, uint8_t *charging_ptr);
+uint32_t Get_Screen_Address(uint8_t index, uint8_t sub_index);
+uint32_t Get_Sym_Sector(uint8_t num);
+uint16_t Get_Symbol_Size_R_W(uint32_t address, uint8_t page, uint8_t *data, uint8_t mode);
+uint16_t Writing_On_Flash(uint8_t *data_ptr);
+void Dot_matrix_handling_disp_message(uint8_t *main,uint8_t *index);
+uint32_t get_sector_offset(uint8_t offset_sector);
+uint32_t Get_Scr_Sector(uint32_t add);
+uint8_t Dot_Matrix_set_indepndant_icons(uint8_t symbol_id, uint32_t check_sym_flag);
+uint8_t Dot_Matrix_special_screen_words(uint8_t symbol_id, uint32_t check_words);
+void Dot_Matrix_handling_decimal_point_value(void);
+void erase_flash_sectors_from_to(uint16_t start,uint16_t end);
+uint16_t Writing_On_Internal_Flash(uint8_t *data_arr);
+void DotMatrixSaveInternalFlash(void);
+uint32_t Get_Sym_Sector_internal(uint8_t num);
+void erase_dot_matrix_language_section(uint8_t lang_num);
+void calc_DM_template_integraity(uint8_t lang_num, uint8_t *data_ptr);
+#endif
