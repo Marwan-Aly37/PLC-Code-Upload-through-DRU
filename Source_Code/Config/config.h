@@ -339,6 +339,19 @@ enum
 #if (PLC_FW_SOURCE > PLC_FW_SOURCE_BUILTIN_RF)
 #error "Invalid PLC firmware source"
 #endif                               
+
+
+#define DATA_SIZE          256
+#define DATA_CRC_SIZE      257
+#define TERMINATION_START  0x02
+#define TERMINATION_SIZE_L 0x04
+#define TERMINATION_SIZE_H 0x00
+#define TERMINATION_CMD    0x00
+#define TERMINATION_TERMINATOR_1    0x21
+#define TERMINATION_TERMINATOR_2    0x0D
+#define TERMINATION_TERMINATOR_3    0x0A
+#define TERMINATION_TERMINATOR_4    0x03
+#define TERMINATION_TERMINATOR_5    0x7E
 /*==========================================================================================
                                LCD (WITH INDIRECT SYMBOLS)
 ==========================================================================================*/

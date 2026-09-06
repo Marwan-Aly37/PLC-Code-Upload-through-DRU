@@ -135,13 +135,6 @@ External Variables
 uint8_t first_init = 0;
 uint8_t first_init_pulses = 0;
 extern uint8_t buffer_save_send[5000];
-uint8_t test;
-//uint8_t arr1[5] = {0};
-//uint8_t arr2[5] = {0};
-//uint8_t arr3[6] = {0};
-uint8_t arr1[5];
-uint8_t arr2[5];
-uint8_t arr3[10];
 
 /*------------------------------------------------------------------------------------------
 Local Variables
@@ -177,7 +170,7 @@ void main() {
 /*RmvCodCmntA_K*/
   __disable_irq();	// Todo _ check their effect 
   WDT_Disable();
-  S_CLK_Init(1);  
+  S_CLK_Init(1); 
   S_RTC_init();
   S_GpioInit_ALL_Modules();  
   vMC_DriversInit();
@@ -196,29 +189,11 @@ void main() {
   IntegrityCrcCheckState();
   Ctrl_Set_Date_Time_Fixed();
 
-//memset(arr1,0xAA,5);
-//memset(arr2,0xBB,5);
-
-//  test = calc_crc(arr1, 5,CRC);
-//  memcpy(arr3,arr2,5);
-//  arr3[5] = test;
-//  test = calc_crc(arr3, 6,CRC);
-
-
-memset(arr1, 0xAA, 5);
-memset(arr2, 0xBB, 5);
-
-memcpy(arr3,     arr1, 5);
-memcpy(arr3 + 5, arr2, 5);
-
-test = calc_crc(arr3, 10, CRC);
   while (1)
   {  
     /*! - Communication task containing all communication interfaces.*/
-    comm_task();;  
+    comm_task();  
     /*! - Control task.*/
     ctrl_task();
   }
 }
-
-

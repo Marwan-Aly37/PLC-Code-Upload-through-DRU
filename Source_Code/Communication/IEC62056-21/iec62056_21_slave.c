@@ -183,6 +183,7 @@ extern uint8_t DotMatrixOpticalFlag;
 extern uint8_t FinishedDotMatrixFlag;
 uint8_t IEC_DRU_flag = 0;
 uint8_t DotmatrixSend = 0;
+uint8_t crc_val;
 /*------------------------------------------------------------------------------------------
                                      Local Variables
 ------------------------------------------------------------------------------------------*/
@@ -699,6 +700,7 @@ void iec_62056_21_rx_char_isr(uint8_t rx_byte)
   /*! - Read received character.*/
   iec_62056_21_isr_buffer[iec_62056_21_isr_index] = rx_byte; 
   iec_62056_21_isr_index++;
+  
   
   if(iec_62056_21_isr_index >= sizeof(iec_62056_21_isr_buffer))
   {
@@ -1547,7 +1549,7 @@ void iec_62056_21_slave_task(void)
             if(pckt_type == DATA_CMD_PCKT)
             {
               ctrl_sys_var_second_optional_feature.test_interface=TRF_PYMT_INT_OPTICAL;
-              if(IEC_62056_21_HANDLE_CMD((uint8_t*)(iec_comm_buffer + 6), pckt_size - 11)==1)
+              if((IEC_62056_21_HANDLE_CMD((uint8_t*)(iec_comm_buffer + 6), pckt_size - 11)==1))
                 send_data_response_pckt(ACKNLDG);
               else
                 send_data_response_pckt(REJECTED);

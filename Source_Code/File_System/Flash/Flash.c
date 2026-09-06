@@ -2342,7 +2342,7 @@ uint8_t write_plc_fw_toflash(void)
   uint8_t flash_addr[4];
   volatile uint8_t written = 0;
   volatile uint8_t verified = 0;
-  uint8_t page_flash[RF_FLASH_SECTOR_SIZE] = {0};
+  uint8_t p7age_flash[RF_FLASH_SECTOR_SIZE] = {0};
   uint8_t page_array[256] = {0};
   uint32_t remaining_size = 0;
   memset(flash_addr, 0, 4);

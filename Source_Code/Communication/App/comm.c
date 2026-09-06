@@ -424,6 +424,13 @@ uint16_t replace_charge_counter=0;
 uint8_t  CommDruBuffer[PAGESIZE]  = {0};
 extern  uint8_t CoverClosedFlag;
 extern uint8_t DM_integraty_template_crc[20];
+
+uint8_t code_available_flag = 0;
+
+/* CRC data initialization */
+uint8_t crc_arr_temp[257];
+uint8_t prev_crc_plc = 0;
+
 /*------------------------------------------------------------------------------------------
 Macros
 ------------------------------------------------------------------------------------------*/
@@ -686,6 +693,15 @@ void CommDruTask(void)
       
 #if (PLC_FW_SOURCE == PLC_FW_SOURCE_BUILTIN_G3)
       write_plc_fw_toflash();
+      memcpy(crc_arr_temp,data_ptr+1,DATA_SIZE);
+      crc_arr_temp[DATA_SIZE] = prev_crc_plc;
+      prev_crc_plc = calc_crc(crc_arr_temp,DATA_CRC_SIZE,CRC);
+   
+      if((check_termination() == TRUE)&&(check_crc() == TRUE))
+      {
+        code_available_flag = 1;
+      }
+      
       if(check)
       {
         COMM_BUZZER_ON(CTRL_BEEP_TONE0);//Good Tone
@@ -985,6 +1001,27 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
 * @note The first byte in the buffer should be a command code byte. Commands
 * should be written as (command code then command data) with any number of commands.
 */
+uint8_t check_termination(void) 
+{
+  if((pckt_size == 10) && (iec_comm_buffer[0] == TERMINATION_START) && (iec_comm_buffer[1] == TERMINATION_SIZE_L) && (iec_comm_buffer[2] == TERMINATION_SIZE_H) && (iec_comm_buffer[3] == TERMINATION_CMD) && (iec_comm_buffer[5] == TERMINATION_TERMINATOR_1) && (iec_comm_buffer[6] == TERMINATION_TERMINATOR_2) && (iec_comm_buffer[7] == TERMINATION_TERMINATOR_3) && (iec_comm_buffer[8] == TERMINATION_TERMINATOR_4) && (iec_comm_buffer[9] == TERMINATION_TERMINATOR_5))
+   {
+      return TRUE;
+   }
+
+   return FALSE;
+}
+
+uint8_t check_crc(void)
+{
+  if((iec_comm_buffer[4] == prev_crc_plc))
+  {
+    return TRUE;
+  }
+  
+  return FALSE;
+}
+
+
 uint8_t comm_handle_rx_cmd(uint8_t *data_ptr, uint16_t data_size)
 {
   // TODO: remove this function
@@ -1871,6 +1908,7 @@ INCREMENT_COUNTER_OF_RESET_METER();
   {
     return FALSE; // Something went wrong 23mlha trace
   }
+
 
   /*
    * Tell the command loop how many bytes were handled.

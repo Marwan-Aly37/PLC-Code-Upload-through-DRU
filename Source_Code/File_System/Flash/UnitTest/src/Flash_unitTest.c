@@ -654,6 +654,7 @@ static uint8_t test_cross_page_write(void)
     return FLASH_UNIT_TEST_FAIL;
   }
 
+
   if(read_cross_buffer[CROSS_PAGE_TEST_LENGTH - 1u] !=
      calc_crc(read_cross_buffer, (CROSS_PAGE_TEST_LENGTH - 1u), CRC_MODE))
   {

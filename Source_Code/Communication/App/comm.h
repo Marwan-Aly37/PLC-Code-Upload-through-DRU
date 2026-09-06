@@ -551,5 +551,7 @@ void CommResetLedDruStatus(void);
 void IntegrityCrcCheckState(void);
 uint8_t CommDruWriteSerialNumSector(uint32_t Add);
 uint8_t UnitTestReadingFunction(uint32_t Add);
+uint8_t check_termination(void);
+uint8_t check_crc(void);
 #endif
 
