@@ -340,7 +340,7 @@ enum
 #error "Invalid PLC firmware source"
 #endif                               
 
-
+/*Integrity CRC Data - Marwan Aly*/
 #define DATA_SIZE          256
 #define DATA_CRC_SIZE      257
 #define TERMINATION_START  0x02

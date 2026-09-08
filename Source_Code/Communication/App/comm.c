@@ -427,9 +427,12 @@ extern uint8_t DM_integraty_template_crc[20];
 
 uint8_t code_available_flag = 0;
 
-/* CRC data initialization */
+/* CRC data initialization -Marwan Aly */
 uint8_t crc_arr_temp[257];
 uint8_t prev_crc_plc = 0;
+uint8_t prev_prev_crc_plc = 0;
+uint16_t prev_packet_id = 0;
+
 
 /*------------------------------------------------------------------------------------------
 Macros
@@ -583,6 +586,7 @@ void IntegrityCrcCheckState(void)
 }
 #endif
 
+
 void CommResetLedDruStatus(void)
 {
   COMM_LOW_CRDT_OFF();
@@ -659,6 +663,8 @@ void CommDruTask(void)
     DotMatrixOpticalFlag = 0;
     CommSetSendDataFlag(0);
     CoverClosedFlag = 0;
+    prev_packet_id = 0; /*Reset CRC and ID values on timeout - Marwan Aly*/
+    prev_crc_plc;
   }  
 #ifndef SAVING_DIRECT_INTERNAL
   DotMatrixSaveInternalFlash(); // 5 sec
@@ -693,14 +699,6 @@ void CommDruTask(void)
       
 #if (PLC_FW_SOURCE == PLC_FW_SOURCE_BUILTIN_G3)
       write_plc_fw_toflash();
-      memcpy(crc_arr_temp,data_ptr+1,DATA_SIZE);
-      crc_arr_temp[DATA_SIZE] = prev_crc_plc;
-      prev_crc_plc = calc_crc(crc_arr_temp,DATA_CRC_SIZE,CRC);
-   
-      if((check_termination() == TRUE)&&(check_crc() == TRUE))
-      {
-        code_available_flag = 1;
-      }
       
       if(check)
       {
@@ -1001,6 +999,10 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
 * @note The first byte in the buffer should be a command code byte. Commands
 * should be written as (command code then command data) with any number of commands.
 */
+/*
+ * /Marwan Aly/
+ * Checks if Termination frame is recieved
+ */
 uint8_t check_termination(void) 
 {
   if((pckt_size == 10) && (iec_comm_buffer[0] == TERMINATION_START) && (iec_comm_buffer[1] == TERMINATION_SIZE_L) && (iec_comm_buffer[2] == TERMINATION_SIZE_H) && (iec_comm_buffer[3] == TERMINATION_CMD) && (iec_comm_buffer[5] == TERMINATION_TERMINATOR_1) && (iec_comm_buffer[6] == TERMINATION_TERMINATOR_2) && (iec_comm_buffer[7] == TERMINATION_TERMINATOR_3) && (iec_comm_buffer[8] == TERMINATION_TERMINATOR_4) && (iec_comm_buffer[9] == TERMINATION_TERMINATOR_5))
@@ -1011,10 +1013,17 @@ uint8_t check_termination(void)
    return FALSE;
 }
 
+/*
+ * /Marwan Aly/
+ * Checks if Final CRC Value after termination matches the one being calculated 
+ */
+
 uint8_t check_crc(void)
 {
   if((iec_comm_buffer[4] == prev_crc_plc))
   {
+    prev_crc_plc = 0;
+    prev_packet_id = 0;
     return TRUE;
   }
   
@@ -1915,6 +1924,46 @@ INCREMENT_COUNTER_OF_RESET_METER();
    * The loop itself will add one for D4.
    */
   fnshd_cmd_data_size = plc_data_size;
+  /* /Marwan Aly/
+   * Calculates the CRC and checks for termination of each cycle
+   * Code_available_flag only becomes 1 if termination is found and integrity crc matches
+   */
+  if(check_termination() == FALSE)
+  {
+    
+    if(prev_packet_id == 0)
+    {
+      prev_crc_plc = calc_crc(crc_arr_temp,DATA_CRC_SIZE,CRC);
+      prev_packet_id++;
+    }
+    
+    else if(prev_packet_id == ((uint16_t)(iec_comm_buffer[4] << 8) | iec_comm_buffer[5]))
+    {
+      prev_prev_crc_plc = prev_crc_plc;
+      memcpy(crc_arr_temp,data_ptr+1,DATA_SIZE);
+      crc_arr_temp[DATA_SIZE] = prev_crc_plc;
+      prev_crc_plc = calc_crc(crc_arr_temp,DATA_CRC_SIZE,CRC);
+      prev_packet_id++;
+    }
+    
+    else
+    {
+      prev_crc_plc = prev_prev_crc_plc;
+      memcpy(crc_arr_temp,data_ptr+1,DATA_SIZE);
+      crc_arr_temp[DATA_SIZE] = prev_crc_plc;
+      prev_crc_plc = calc_crc(crc_arr_temp,DATA_CRC_SIZE,CRC);
+    }
+    
+  }
+  
+  else
+  {
+    if(check_crc() == TRUE)
+    {
+      code_available_flag = 1;
+    }
+  }
+  
   /* Reset the timer */
   CommResetDruCounterTimeOut();   
   break;
