@@ -366,4 +366,6 @@ uint8_t CommValidateExtFlashStatus(uint8_t* Address,uint8_t* Data,uint16_t size)
 uint8_t FlashWrite_Internal(uint32_t u32Address, uint8_t *u8PtrData, uint16_t u16Length);
 uint8_t FlashRead_Internal(uint32_t u32Address, uint8_t *u8PtrData, uint16_t u16Length);
 uint8_t Flash_Write_Per_Page_Internal(uint32_t u32Address, uint8_t f_page, uint8_t *u8PtrData, uint16_t u16Length);
+uint8_t write_plc_fw_toflash(void);
+uint8_t write_fw_Rf_toflash(void);
 #endif /* FLASH_INTF_H_ */

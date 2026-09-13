@@ -628,16 +628,6 @@ uint8_t check_pckt_valid(void)
       if((iec_comm_buffer[3] == DATA_END_COMM_TYPE) && ((state == WAIT_CMD)||(state == WAIT_BOOTLOADER_DATA) || (state == WAIT_DATA_RQST)))
       {
         pckt_type = DATA_END_COMM_PCKT; 
-        /* Check if the command was PLC then call the reset function */
-        if((plc_first_packet == 0) || (rf_first_packet == 0))
-        {
-           plc_reset_var();
-           rf_reset_var();
-        }
-        else
-        {
-          /* Do nothing */
-        }
        
       }
 
@@ -1427,8 +1417,62 @@ void iec_62056_21_slave_task(void)
         /*! - Send new data list packet and move to next state.*/
         send_data_pckt(READOUT_DATA_STND_SEND);                                
         reset_state_machine();
-      }      
+      }  
       
+      if((pckt_size == 10) && (iec_comm_buffer[0] == 0x02) &&(iec_comm_buffer[1] == 0x04) && (iec_comm_buffer[2] == 0x00) && (iec_comm_buffer[3] == 0x00)  && (iec_comm_buffer[5] == 0x21)&&(iec_comm_buffer[6] == 0x0d) && (iec_comm_buffer[7] == 0x0a) && (iec_comm_buffer[8] == 0x03) && (iec_comm_buffer[9] == 0x7e) )
+      {
+
+/* Check if the command was PLC then call the reset function */
+        if(plc_first_packet == 0)
+        {
+          if(firmware_crc_matches(iec_comm_buffer[4]))
+          {
+         
+            /* Then we need to set the flag */
+            firmware_internal_mem_rw[PLC_FIRMWARE_FLAG_BYTE] = 1; 
+            memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+            
+          }
+          else
+          {
+         
+            firmware_internal_mem_rw[PLC_FIRMWARE_FLAG_BYTE] = 0; 
+            memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+          }
+          plc_reset_var();
+        }
+        else
+        {
+          /* Do nothing */
+        }
+#if (PLC_RF_HYBRID_MODE == 1)
+           if(rf_first_packet == 0)
+           {
+          if(firmware_crc_matches(iec_comm_buffer[4]))
+          {
+            /* Then we need to set the flag */
+            firmware_internal_mem_rw[RF_FIRMWARE_FLAG_BYTE] = 1; 
+            memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+            
+          }
+          else
+          {
+            firmware_internal_mem_rw[RF_FIRMWARE_FLAG_BYTE] = 0; 
+            memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+          }
+              rf_reset_var();
+           }
+        else
+        {
+          /* Do nothing */
+        }
+#endif
+         
+        /* This special end frame has a fixed BCC, so do not validate it again
+           as a normal data packet. */
+        reset_state_machine();
+        pckt_size = 0u;
+      }
       if(pckt_size)
       {
         /*! - Check validity of received packet and get its type.*/

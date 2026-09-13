@@ -35,7 +35,13 @@
 #define HDLC_PHYSICAL_ID_ID_START_PAGE_INDEX                     6
 #define HDLC_PHYSICAL_ID_ID_END_PAGE_INDEX                       6
 #define HDLC_PHYSICAL_ID_ID_SECTOR                               297//sector
+/***********  FIRMWARE External FLASH ADDRESSES ************/   
+#define EXTERN_PLC_FIRMWARE_START_SEC                                   800
+#define EXTERN_PLC_FIRMWARE_END_SEC                                     860
 
+#define EXTERN_RF_FIRMWARE_START_SEC                                    861
+#define EXTERN_RF_FIRMWARE_END_SEC                                      878    
+/*============================================================================================================*/  
 
 /******************************** RF FIRMWARE INTERNAL FLASH ADDRESSES ***********************************/   
 #define FIRMWARE_FLAG_START_ADDRESS ((uint8_t *)0x3FF00u)

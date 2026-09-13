@@ -328,20 +328,11 @@ enum
 /*==========================================================================================
                                      PLC FIRMWARE
 ==========================================================================================*/                              
-/* PLC firmware source options. */
-#define PLC_FW_SOURCE_D4             0u
-#define PLC_FW_SOURCE_BUILTIN_G3     1u
-#define PLC_FW_SOURCE_BUILTIN_RF     2u
+
 
 #define PLC_RF_HYBRID_MODE           0u
-
-
-/* Select exactly one option here. */
-#define PLC_FW_SOURCE PLC_FW_SOURCE_D4
-
-#if (PLC_FW_SOURCE > PLC_FW_SOURCE_BUILTIN_RF)
-#error "Invalid PLC firmware source"
-#endif                               
+#define PLC_RF_HARDCODED_MODE        0u
+                               
 /*==========================================================================================
                                LCD (WITH INDIRECT SYMBOLS)
 ==========================================================================================*/

@@ -120,7 +120,9 @@ INCLUDE FILES FOR MODULE
 
 ==========================================================================================*/
 #include "v85xx_flash.h"  
+#include "basic_srv.h"
 #include "comm.h"
+#include "Flash.h"
 #include "dependencies_layer.h"
 #include "ctrl.h"
 #include "config.h"
@@ -402,7 +404,7 @@ External Variables
 #ifdef IEC_62056_21_SLAVE
 extern uint8_t iec_comm_buffer[IEC_BUFFER_SIZE]; /*!< Buffer of IEC protocol communication to receive packets in.*/
 #endif
-extern uint8_t RFID_idle_fla;
+extern uint8_t RFID_idle_flag;
  uint8_t EchoBuffer[260];
 /*------------------------------------------------------------------------------------------
 Local Variables
@@ -420,6 +422,11 @@ uint32_t plc_write_address = PLC_FIRMWARE_START_ADDRESS;
  uint8_t rf_first_packet = 1u;
 /* Address where the next received data will be written. */
 uint32_t rf_write_address = RF_FIRMWARE_START_ADDRESS;
+
+uint8_t firmware_crc_mem_check[257];
+uint8_t firmware_crc_previous = 0;
+uint8_t firmware_internal_mem_rw[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#define FIRMWARE_PACKET_HEADER_SIZE ((uint16_t)7u)
 /*=====================*/
 
 static  comm_source_t comm_source_flag =  LOCAL_SOURCE;
@@ -654,7 +661,9 @@ void CommDruTask(void)
   {
     CommResetDruCounterTimeOut();  
     plc_reset_var(); /* 23ml reset ll var bta3t el plc firmware */
+#if (PLC_RF_HYBRID_MODE == 1)
     rf_reset_var();
+#endif
     DotMatrixOpticalFlag = 0;
     CommSetSendDataFlag(0);
     CoverClosedFlag = 0;
@@ -879,11 +888,13 @@ uint8_t UnitTestReadingFunction(uint32_t Add)
  */
 void plc_reset_var(void)
 {
-  
    plc_write_address = PLC_FIRMWARE_START_ADDRESS;
    plc_first_packet = 1;
+   memset(firmware_crc_mem_check,0x00,257);
+   firmware_crc_previous = 0;
   return;
 }
+#if (PLC_RF_HYBRID_MODE == 1)
 /* @internship Program
  * This function is called we want to reset all variables used by RF
  */
@@ -893,7 +904,20 @@ void rf_reset_var(void)
   
    rf_write_address = RF_FIRMWARE_START_ADDRESS;
    rf_first_packet = 1;
+   memset(firmware_crc_mem_check,0x00,257);
+   firmware_crc_previous = 0;
   return;
+}
+#endif
+/* @internship Program
+ * This function is used to check the CRC
+ */
+uint8_t firmware_crc_matches(uint8_t received_crc)
+{
+  if(firmware_crc_previous == received_crc)
+    return 1;
+  else
+    return 0;
 }
 /*
  * Save the data bytes received after command D4.
@@ -904,12 +928,61 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
 {
   uint16_t sector;
   uint32_t sector_address;
-
+  /* ID from the two frame bytes before D4; the first packet has ID zero. */
+  uint16_t packet_id;
+  /* Firmware byte offset represented by this ID, using 256-byte blocks. */
+  uint32_t packet_offset;
+  /* Number of firmware bytes already saved in the current transfer. */
+  uint32_t saved_bytes;
+ 
   /* Receiving D4 without data is invalid. */
-  if(data_length == 0u)
+  if(data_length <= FIRMWARE_PACKET_HEADER_SIZE)
   {
     plc_reset_var();
     return FALSE;
+  }
+  
+  /* Reject payloads larger than the application's 256-byte block size. */
+  if(data_length > 256u)
+    /* FALSE: this payload is too large for the packet layout and CRC buffer. */
+    return FALSE;
+
+  /* data points after D4: data[-3] is ID high byte, data[-2] is ID low byte. */
+  packet_id = ((uint16_t)data[-3] << 8) | data[-2];
+  /* Convert the zero-based packet ID into its expected firmware byte offset. */
+  packet_offset = (uint32_t)packet_id * 256u;
+
+  /* A new transfer has no saved packet to acknowledge as a duplicate. */
+  if(plc_first_packet == 1u)
+  {
+    /* The application always starts a new transfer at packet ID zero. */
+    if(packet_id != 0u)
+      /* FALSE: accepting this ID would skip the beginning of the firmware. */
+      return FALSE;
+  }
+  else
+  {
+    /* Reuse the write address to track progress. */
+    saved_bytes = plc_write_address - PLC_FIRMWARE_START_ADDRESS;
+
+    /* An offset behind current progress may be a retry of a saved packet. */
+    if(packet_offset < saved_bytes)
+    { 
+      /* The retry must end exactly at the end of the last saved packet. */
+      if((packet_offset + data_length) != saved_bytes)
+        /* FALSE: this is an older packet or its length differs from the last one. */
+        return FALSE;
+
+      /* TRUE: Data Already Found then send true ( return true y3ny ACK ) to send the next
+       * FALSE: Matching ID/Length but different data let the SW resend again with NACK */
+      return (memcmp((uint8_t *)(PLC_FIRMWARE_START_ADDRESS + packet_offset),
+                     data, data_length) == 0) ? TRUE : FALSE;
+    }
+
+    /* A new packet must start exactly where the saved firmware currently ends. */
+    if(packet_offset != saved_bytes)
+      /* FALSE: kda galy ID 2kbr m3anaha fe data 3mlt skip */
+      return FALSE;
   }
 
   /* Erase the reserved area before writing the first packet. */
@@ -924,8 +997,26 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
       Delay_ms(4);
     }
     plc_write_address = PLC_FIRMWARE_START_ADDRESS;
+       /* We need to calculate the CRC for the case of the first packet */
+    memset(firmware_crc_mem_check,0x00,257);
+    firmware_crc_previous =0;
+    firmware_crc_mem_check[256]=calc_crc(data,data_length,CRC);
+    firmware_crc_previous = firmware_crc_mem_check[256];
     plc_first_packet = 0u;
+    COMM_BUZZER_ON(CTRL_BEEP_TONE0); /* Make a tone */
+    
+    /* You have to clear the PLC firmware Flag inside the internal memory */
+    firmware_internal_mem_rw[PLC_FIRMWARE_FLAG_BYTE] = 0; 
+    memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+   
   }
+  else
+  {
+    memcpy(firmware_crc_mem_check,data,data_length);
+   firmware_crc_mem_check[data_length] = firmware_crc_previous;
+   firmware_crc_previous =calc_crc(firmware_crc_mem_check,data_length+1,CRC); 
+  }
+  
 
   /* Check that this packet will not exceed the reserved area. */
   if((uint32_t)data_length >(PLC_FIRMWARE_END_ADDRESS - plc_write_address))
@@ -936,7 +1027,6 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
 
   /* Write the received data into the internal flash. */
   FLASH_ProgramByte(plc_write_address, data, data_length);
-//memcpy(data_test,(uint8_t*)plc_write_address , 512);
 
   /* Read the written bytes directly and compare them with the packet. */
   if(memcmp((uint8_t*)plc_write_address, data, data_length) != 0)
@@ -950,6 +1040,8 @@ uint8_t save_plc_firmware_data(uint8_t *data, uint16_t data_length) // zawd haga
 
   return TRUE;
 }
+
+#if (PLC_RF_HYBRID_MODE == 1)
 /* @internship Program
  * This function is called when we receive RF firmware command
  */
@@ -957,13 +1049,62 @@ uint8_t save_rf_firmware_data(uint8_t *data, uint16_t data_length)
 {
   uint16_t sector;
   uint32_t sector_address;
+    /* ID from the two frame bytes before D4; the first packet has ID zero. */
+  uint16_t packet_id;
+  /* Firmware byte offset represented by this ID, using 256-byte blocks. */
+  uint32_t packet_offset;
+  /* Number of firmware bytes already saved in the current transfer. */
+  uint32_t saved_bytes;
 
   /* Receiving D4 without data is invalid. */
-  if(data_length == 0u)
+  if(data_length <= FIRMWARE_PACKET_HEADER_SIZE)
   {
     rf_reset_var();
     return FALSE;
   }
+   /* Reject payloads larger than the application's 256-byte block size. */
+  if(data_length > 256u)
+    /* FALSE: this payload is too large for the packet layout and CRC buffer. */
+    return FALSE;
+
+  /* data points after D4: data[-3] is ID high byte, data[-2] is ID low byte. */
+  packet_id = ((uint16_t)data[-3] << 8) | data[-2];
+  /* Convert the zero-based packet ID into its expected firmware byte offset. */
+  packet_offset = (uint32_t)packet_id * 256u;
+
+  /* A new transfer has no saved packet to acknowledge as a duplicate. */
+  if(rf_first_packet == 1u)
+  {
+    /* The application always starts a new transfer at packet ID zero. */
+    if(packet_id != 0u)
+      /* FALSE: accepting this ID would skip the beginning of the firmware. */
+      return FALSE;
+  }
+  else
+  {
+    /* Reuse the write address to track progress. */
+    saved_bytes = rf_write_address - RF_FIRMWARE_START_ADDRESS;
+
+    /* An offset behind current progress may be a retry of a saved packet. */
+    if(packet_offset < saved_bytes)
+    { 
+      /* The retry must end exactly at the end of the last saved packet. */
+      if((packet_offset + data_length) != saved_bytes)
+        /* FALSE: this is an older packet or its length differs from the last one. */
+        return FALSE;
+
+      /* TRUE: Data Already Found then send true ( return true y3ny ACK ) to send the next
+       * FALSE: Matching ID/Length but different data let the SW resend again with NACK */
+      return (memcmp((uint8_t *)(RF_FIRMWARE_START_ADDRESS + packet_offset),
+                     data, data_length) == 0) ? TRUE : FALSE;
+    }
+
+    /* A new packet must start exactly where the saved firmware currently ends. */
+    if(packet_offset != saved_bytes)
+      /* FALSE: kda galy ID 2kbr m3anaha fe data 3mlt skip */
+      return FALSE;
+  }
+
 
   /* Erase the reserved area before writing the first packet. */
   if(rf_first_packet == 1u)
@@ -977,8 +1118,26 @@ uint8_t save_rf_firmware_data(uint8_t *data, uint16_t data_length)
       Delay_ms(4);
     }
     rf_write_address = RF_FIRMWARE_START_ADDRESS;
+
+     /* We need to calculate the CRC for the case of the first packet */
+    memset(firmware_crc_mem_check,0x00,257);
+    firmware_crc_previous =0;
+    firmware_crc_mem_check[256]=calc_crc(data,data_length,CRC);
+    firmware_crc_previous = firmware_crc_mem_check[256];
     rf_first_packet = 0u;
+    /* You have to clear the PLC firmware Flag inside the internal memory */
+    firmware_internal_mem_rw[RF_FIRMWARE_FLAG_BYTE] = 0; 
+    memcpy(FIRMWARE_FLAG_START_ADDRESS,firmware_internal_mem_rw,16);
+    
+    COMM_BUZZER_ON(CTRL_BEEP_TONE0); /* Make a tone */
   }
+  else
+  {
+   memcpy(firmware_crc_mem_check,data,data_length);
+   firmware_crc_mem_check[data_length] = firmware_crc_previous;
+   firmware_crc_previous =calc_crc(firmware_crc_mem_check,data_length+1,CRC); 
+  }
+
 
   /* Check that this packet will not exceed the reserved area. */
   if((uint32_t)data_length >(RF_FIRMWARE_END_ADDRESS - rf_write_address))
@@ -989,7 +1148,7 @@ uint8_t save_rf_firmware_data(uint8_t *data, uint16_t data_length)
 
   /* Write the received data into the internal flash. */
   FLASH_ProgramByte(rf_write_address, data, data_length);
-//memcpy(data_test,(uint8_t*)plc_write_address , 512);
+
 
   /* Read the written bytes directly and compare them with the packet. */
   if(memcmp((uint8_t*)rf_write_address, data, data_length) != 0)
@@ -1003,6 +1162,7 @@ uint8_t save_rf_firmware_data(uint8_t *data, uint16_t data_length)
 
   return TRUE; 
 }
+#endif
 /*!
 * @brief Handle a received command packet from any communication interface.
 *
@@ -1915,6 +2075,7 @@ INCREMENT_COUNTER_OF_RESET_METER();
   CommResetDruCounterTimeOut();   
   break;
     }
+  #if (PLC_RF_HYBRID_MODE == 1)
       case RF_FIRMWARE_SAVING_CMD:
       {
   uint16_t rf_data_size = 0;
@@ -1942,6 +2103,7 @@ INCREMENT_COUNTER_OF_RESET_METER();
   CommResetDruCounterTimeOut();   
   break;
     }
+#endif
 
 /* case TRF_TOTAL_CHARGES_AMOUNT removed: tariff/payment is not built for the DRU. */
 #if defined(DOT_MATRIX_LCD_ENABLE) 

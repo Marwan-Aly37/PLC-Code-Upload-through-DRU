@@ -429,6 +429,8 @@ extern uint8_t id_ar_size[2];
 extern uint8_t plc_first_packet;
 extern uint8_t rf_first_packet;
 
+extern uint8_t firmware_internal_mem_rw[16];
+
 /*------------------------------------------------------------------------------------------
                                           Macros
 ------------------------------------------------------------------------------------------*/
@@ -457,6 +459,10 @@ void rf_reset_var(void);
  * This function is called when we receive RF firmware command
  */
 uint8_t save_rf_firmware_data(uint8_t *data, uint16_t data_length);
+/* @internship Program
+ * This function is used to check the CRC
+ */
+uint8_t firmware_crc_matches(uint8_t received_crc);
 /*!
  * @ingroup COMM_CMD
  */
