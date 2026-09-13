@@ -2349,8 +2349,8 @@ uint8_t write_plc_fw_toflash(void)
     remaining_size = PLC_FIRMWARE_END_ADDRESS - i;
     remaining_size = (remaining_size > NUM_BYTES_PER_PAGE) ? NUM_BYTES_PER_PAGE : remaining_size;
     memset(page, 0x00, NUM_BYTES_PER_PAGE);
-    memcpy(page, (uint32_t*)i , remaining_size);
-    ConvertUint32ToBytes(flash_addr, ((EXTERN_PLC_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + i));
+    memcpy(page, (const uint8_t*)i, remaining_size);
+    ConvertUint32ToBytes(flash_addr,((uint32_t)EXTERN_PLC_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + (i - PLC_FIRMWARE_START_ADDRESS));
     if (FLASH_gWrite(flash_addr, page, (uint16_t)remaining_size)) // lw katb wl dnya tmam f hro7 ll  else 2ny ktbt tmam
     {
       written = 0;
@@ -2359,9 +2359,11 @@ uint8_t write_plc_fw_toflash(void)
     else /* OK */
       written = 1;
   }
-  for (uint32_t i = PLC_FIRMWARE_START_ADDRESS; i < PLC_FIRMWARE_END_ADDRESS; i += NUM_BYTES_PER_PAGE)
+  if(written == 1) // if written == 0 then no need to verify and consume more time
   {
-    ConvertUint32ToBytes(flash_addr, (EXTERN_PLC_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE + i));
+    for (uint32_t i = PLC_FIRMWARE_START_ADDRESS; i < PLC_FIRMWARE_END_ADDRESS; i += NUM_BYTES_PER_PAGE)
+  {
+     ConvertUint32ToBytes(flash_addr,((uint32_t)EXTERN_PLC_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + (i - PLC_FIRMWARE_START_ADDRESS));
     remaining_size = PLC_FIRMWARE_END_ADDRESS - i;
     remaining_size = (remaining_size > NUM_BYTES_PER_PAGE) ? NUM_BYTES_PER_PAGE : remaining_size;
     memset(page, 0x00, NUM_BYTES_PER_PAGE);
@@ -2370,7 +2372,7 @@ uint8_t write_plc_fw_toflash(void)
       verified = 0;
       break;
     }
-    else if (memcmp(((uint32_t*)i), page, remaining_size))
+    else if (memcmp((const uint8_t*)i, page, remaining_size) != 0)
     {
       verified = 0;
       break;
@@ -2378,6 +2380,8 @@ uint8_t write_plc_fw_toflash(void)
     else
       verified = 1;
   }
+  }
+  
   return written && verified;
 }
 
@@ -2397,8 +2401,8 @@ uint8_t write_fw_Rf_toflash(void)
     remaining_size = RF_FIRMWARE_END_ADDRESS - i;
     remaining_size = (remaining_size > NUM_BYTES_PER_PAGE) ? NUM_BYTES_PER_PAGE : remaining_size;
     memset(page, 0x00, 256);
-     memcpy(page, (uint32_t*)i , remaining_size);
-    ConvertUint32ToBytes(flash_addr, ((EXTERN_RF_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + i));
+     memcpy(page, (const uint8_t*)i, remaining_size);
+     ConvertUint32ToBytes(flash_addr,((uint32_t)EXTERN_RF_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + (i - RF_FIRMWARE_START_ADDRESS));
     if (FLASH_gWrite(flash_addr, page, (uint16_t)remaining_size))
     {
       written = 0;
@@ -2407,9 +2411,11 @@ uint8_t write_fw_Rf_toflash(void)
     else
       written = 1;
   }
+   if(written == 1)
+  {
   for (uint32_t i = RF_FIRMWARE_START_ADDRESS; i < RF_FIRMWARE_END_ADDRESS; i += NUM_BYTES_PER_PAGE)
   {
-    ConvertUint32ToBytes(flash_addr, (EXTERN_RF_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE + i));
+    ConvertUint32ToBytes(flash_addr,((uint32_t)EXTERN_RF_FIRMWARE_START_SEC * FLASH_SECTOR_SIZE) + (i - RF_FIRMWARE_START_ADDRESS));
     remaining_size = RF_FIRMWARE_END_ADDRESS - i;
     remaining_size = (remaining_size > NUM_BYTES_PER_PAGE) ? NUM_BYTES_PER_PAGE : remaining_size;
     memset(page, 0x00, 256);
@@ -2418,13 +2424,14 @@ uint8_t write_fw_Rf_toflash(void)
       verified = 0;
       break;
     }
-    else if (memcmp(((uint32_t*)i), page, remaining_size))
+    else if (memcmp((const uint8_t*)i, page, remaining_size) != 0)
     {
       verified = 0;
       break;
     }
     else
       verified = 1;
+  }
   }
   return written && verified;
 }

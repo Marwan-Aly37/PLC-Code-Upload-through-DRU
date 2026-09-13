@@ -671,8 +671,53 @@ void CommDruTask(void)
 #ifndef SAVING_DIRECT_INTERNAL
   DotMatrixSaveInternalFlash(); // 5 sec
 #endif
-  // hn3ml detect ll flash size
-  // hn3ml hwar 2no y3ml flashing
+#if ((PLC_RF_HYBRID_MODE == 0) || (PLC_RF_HYBRID_MODE == 1))
+  /* The existing Up-button handler sets this event after a button press. */
+  if(CommGetSendDataFlag())
+  {
+    /* Reset the button again before handling it */
+    CommSetSendDataFlag(0);
+  
+
+    /* Read ready flags from internal flash. Hybrid requires BOTH images ready. */
+   if (((volatile uint8_t *)FIRMWARE_FLAG_START_ADDRESS)[PLC_FIRMWARE_FLAG_BYTE] == 1u
+#if (PLC_RF_HYBRID_MODE == 1)
+    && ((volatile uint8_t *)FIRMWARE_FLAG_START_ADDRESS)[RF_FIRMWARE_FLAG_BYTE] == 1u
+#endif
+   )
+    {
+      /* Ready: blue LED and Tone1 while copying firmware to external flash. */
+      LedFlag = LED_OFF; /* Existing LED_OFF state means blue on, red off. */
+      COMM_TAMPER_LED_OFF();
+      COMM_LOW_CRDT_ON();
+      COMM_BUZZER_ON(CTRL_BEEP_TONE1);
+
+      /* Copy PLC first. In Hybrid mode, copy RF only if PLC succeeded. */
+      if((write_plc_fw_toflash() == 0u)
+#if (PLC_RF_HYBRID_MODE == 1)
+         || (write_fw_Rf_toflash() == 0u)
+#endif
+        )
+      {
+        LedFlag = LED_ON; /* Existing LED_ON state means red on, blue off. */
+        COMM_LOW_CRDT_OFF();
+        COMM_TAMPER_LED_ON();
+        COMM_BUZZER_ON(CTRL_BEEP_TONE0);
+      }
+    }
+   else
+    {
+      /* A required image is not ready (including an erased flag): write neither image. */
+      LedFlag = LED_ON;
+      COMM_LOW_CRDT_OFF();
+      COMM_TAMPER_LED_ON();
+      COMM_BUZZER_ON(CTRL_BEEP_TONE0);
+    }
+
+    /* This firmware button press is complete do not run other button actions. */
+    return;
+  }
+#endif
 #ifdef DRU_SW_UP
   if(LedFlag == LED_FLASHING_ACCPT)
     CommSetSendDataFlag(0);
